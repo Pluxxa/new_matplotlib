@@ -1,9 +1,8 @@
-
 import csv
-
 import scrapy
 from openpyxl import Workbook
-
+import pandas as pd
+import matplotlib.pyplot as plt
 
 class DivannewparsSpider(scrapy.Spider):
     name = "divannewpars"
@@ -59,9 +58,11 @@ class DivannewparsSpider(scrapy.Spider):
                 name = light.css('span::text').get()
                 price = light.css('div.q5Uds span::text').get()
                 url = response.urljoin(light.css('a').attrib['href'])
-                print(price.strip())
+                if ' ' in price:
+                    price = price.replace(" ", "")
+
                 # Сохраняем данные в XLSX
-                self.sheet.append([name, price, url])
+                self.sheet.append([name, int(price), url])
                 with open('light.csv', 'a', newline='', encoding='utf-8') as file:
                     writer = csv.writer(file)
                     writer.writerow([name, price, url])
@@ -73,7 +74,17 @@ class DivannewparsSpider(scrapy.Spider):
                     "url": url
                 }
 
+        data = pd.read_csv('C:/PyCh/new_matplotlib/divanpars/divanpars/spiders/light.csv')
+        a = data['Цена'].mean()
+
+        plt.hist(data['Цена'], bins=6)
+        plt.xlabel('x ось')
+        plt.ylabel('y ось')
+        plt.title(f'Гистограмма для цен на диваны.\nСредняя цена дивана {a} руб.')
+
+        plt.show()
 
 
     def closed(self, reason):
         self.workbook.save("output.xlsx")
+
